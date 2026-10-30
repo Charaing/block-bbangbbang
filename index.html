@@ -154,6 +154,36 @@
   #loading .pb div { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #0f0 0 10px, #000 10px 12px); }
   .toast { position: fixed; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 250; background: #ff0; color: #f00; border: 4px double #f00; padding: 10px 16px; font-size: 18px; font-weight: bold; animation: wobble .3s infinite; }
 
+  /* ===== 가짜 프리미엄 결제창 (아무것도 입력 안 됨) ===== */
+  #pay { position: fixed; inset: 0; z-index: 260; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.75); padding: 16px; }
+  #pay.on { display: flex; }
+  #pay .box {
+    width: min(360px, 100%); background: linear-gradient(#fff, #ffe0f0); color: #000; border: 6px ridge gold; border-radius: 14px; padding: 16px;
+    font-family: "Gulim", "굴림", "Comic Sans MS", sans-serif; text-align: center; box-shadow: 0 0 40px 10px gold;
+    animation: adin .6s cubic-bezier(.2,2,.4,1);
+  }
+  #pay h3 { margin: 0 0 4px; font-size: 22px; color: #c00; animation: blink .4s steps(2) infinite; }
+  #pay .crown { font-size: 50px; animation: wobble .5s infinite; }
+  #pay .price { font-size: 34px; font-weight: 900; color: #f0f; -webkit-text-stroke: 1px #000; margin: 6px 0; }
+  #pay .price s { font-size: 16px; color: #888; -webkit-text-stroke: 0; }
+  #pay ul { text-align: left; font-size: 14px; margin: 6px 0 10px; padding-left: 22px; }
+  #pay .f { background: #fff; border: 2px inset #aaa; padding: 9px; margin: 6px 0; text-align: left; color: #aaa; font-family: "Courier New", monospace; cursor: text; }
+  #pay .row { display: flex; gap: 6px; } #pay .row .f { flex: 1; }
+  #pay .buy { width: 100%; font: inherit; font-size: 22px; font-weight: bold; padding: 10px; margin-top: 8px; background: linear-gradient(#ffef00, #ff9900); border: 4px outset #fc0; cursor: pointer; animation: wobble .4s infinite; }
+  #pay .no { margin-top: 10px; font-size: 11px; color: #999; display: inline-block; cursor: pointer; transition: transform .12s; }
+  #pay .tiny { font-size: 9px; color: #bbb; margin-top: 6px; }
+  #troll {
+    position: fixed; inset: 0; z-index: 270; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px;
+    background: repeating-radial-gradient(circle, #ff0 0 30px, #f0f 30px 60px, #0ff 60px 90px); animation: spinbg .5s linear infinite;
+  }
+  #troll.on { display: flex; }
+  #troll .face { font-size: clamp(90px, 30vw, 180px); animation: trollface .25s ease-in-out infinite alternate; }
+  @keyframes trollface { from { transform: rotate(-25deg) scale(1); } to { transform: rotate(25deg) scale(1.25); } }
+  #troll h2 { margin: 0; white-space: nowrap; font-size: clamp(44px, 14vw, 100px); color: #fff; -webkit-text-stroke: 4px #f00; text-shadow: 6px 6px 0 #000; animation: overin .8s cubic-bezier(.2,2,.4,1), shake .4s linear .8s infinite; }
+  #troll p { margin: 0; font-size: clamp(20px, 6vw, 30px); background: #000; color: #0f0; padding: 6px 12px; min-height: 1.4em; }
+  #troll button { font: inherit; font-size: 22px; padding: 10px 22px; background: #0f0; border: 5px outset #0a0; cursor: pointer; }
+  .lol { position: fixed; z-index: 280; pointer-events: none; font-weight: 900; color: #f00; -webkit-text-stroke: 1px #fff; animation: boing 1s ease-out forwards; }
+
   .under { margin-top: 10px; font-size: 13px; background: #000; color: #0f0; padding: 2px 8px; font-family: "Courier New", monospace; }
   .under img { vertical-align: middle; }
 </style>
@@ -176,6 +206,31 @@
   <div class="pb"><div id="pbar"></div></div>
   <div id="ltxt">0%</div>
   <div style="font-size:13px;color:#888">(화면을 누르면 시작됩니다 — 소리 켜짐 주의)</div>
+</div>
+<!-- 진짜 입력칸 아님: 그냥 div. 아무 데도 안 보냄 -->
+<div id="pay">
+  <div class="box">
+    <div class="crown">👑</div>
+    <h3>⚠ 무료 체험이 종료되었습니다 ⚠</h3>
+    <div>계속 하려면 <b>블록빵빵 PREMIUM GOLD VIP</b> 결제 필요</div>
+    <div class="price"><s>999,000원</s> 49,900원</div>
+    <ul>
+      <li>블록이 <b>황금색</b>으로 바뀜 (진짜임)</li>
+      <li>광고 제거 (광고 2배)</li>
+      <li>엄마한테 자랑 가능</li>
+    </ul>
+    <div class="f">카드번호 0000-0000-0000-0000</div>
+    <div class="row"><div class="f">MM/YY</div><div class="f">CVC</div></div>
+    <button class="buy">💳 지금 결제하기 💳</button>
+    <div class="no">아니요, 저는 블록을 사랑하지 않습니다</div>
+    <div class="tiny">*결제 시 영혼이 함께 청구될 수 있음</div>
+  </div>
+</div>
+<div id="troll">
+  <div class="face">🤪</div>
+  <h2>속았쥬?ㅋ</h2>
+  <p id="trolltxt"></p>
+  <button id="trollok">ㅇㅋ 인정... 😭</button>
 </div>
 <div id="over">
   <h2>겜 끝 ㅋ</h2>
@@ -567,7 +622,70 @@ function bgm() {
   });
 })();
 
+// ===================== 30점 넘으면 가짜 프리미엄 결제창 =====================
+// 입력칸은 전부 그냥 div라서 아무것도 입력/전송 안 됨. 누르는 순간 바로 농락.
+let paywallShown = false;
+const _setScore = setScore;
+setScore = function (add) {
+  _setScore(add);
+  if (score >= 30 && !paywallShown) {
+    paywallShown = true;
+    setTimeout(() => { document.getElementById("pay").classList.add("on"); fanfare(); }, 800);
+  }
+};
+const payEl = document.getElementById("pay");
+payEl.querySelectorAll(".f, .buy").forEach(el => el.addEventListener("pointerdown", e => { e.preventDefault(); gotcha(); }));
+const noBtn = payEl.querySelector(".no");
+noBtn.addEventListener("pointerenter", () => {
+  noBtn.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * -120}px) rotate(${Math.random() * 60 - 30}deg)`;
+  beep(1400, .05);
+});
+noBtn.addEventListener("click", gotcha); // 잡았어도 결국 농락
+
+const TAUNTS = [
+  "이걸 진짜 하려고 했음? ㅋㅋㅋㅋ",
+  "49,900원 블록에 쓰려던 사람 ㅋ",
+  "님 지갑 제가 지켜드림 ^^",
+  "황금 블록 같은 건 없음 ㅋㅋ",
+  "엄마한테 이를 거임 ㅋ",
+  "님 방금 손가락 떨렸죠? 다 봄",
+  "ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ",
+  "인터넷에서 카드번호 함부로 넣지 마세요 (진지)",
+];
+let trollTimer;
+function gotcha() {
+  payEl.classList.remove("on");
+  const tr = document.getElementById("troll");
+  tr.classList.add("on");
+  // 웃음소리 (삑삑이)
+  for (let k = 0; k < 12; k++) setTimeout(() => beep(700 + (k % 2) * 300 + Math.random() * 100, .08, "square", .07), k * 110);
+  setTimeout(sadTrombone, 1500);
+  const txt = document.getElementById("trolltxt");
+  let k = 0;
+  const say = () => { txt.textContent = TAUNTS[k++ % TAUNTS.length]; };
+  say();
+  clearInterval(trollTimer);
+  trollTimer = setInterval(() => {
+    say();
+    for (let j = 0; j < 5; j++) {
+      const d = document.createElement("div");
+      d.className = "lol";
+      d.textContent = ["ㅋㅋㅋ", "ㅋ", "ㅋㅋㅋㅋㅋ", "푸하하", "ㅍㅎㅎ", "🤣", "😂", "👉🤡"][Math.floor(Math.random() * 8)];
+      d.style.left = Math.random() * 100 + "vw"; d.style.top = Math.random() * 100 + "vh";
+      d.style.fontSize = 20 + Math.random() * 40 + "px";
+      document.body.appendChild(d); setTimeout(() => d.remove(), 1000);
+    }
+  }, 1100);
+  makeItRain(30);
+}
+document.getElementById("trollok").addEventListener("click", () => {
+  clearInterval(trollTimer);
+  document.getElementById("troll").classList.remove("on");
+  popText("공짜로 계속 ㄱㄱ");
+});
+
 function start() {
+  paywallShown = false;
   board = Array(N * N).fill(null);
   tray = [newPiece(), newPiece(), newPiece()];
   score = 0;
