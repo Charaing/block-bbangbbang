@@ -123,6 +123,37 @@
   }
   #again:active { border-style: inset; }
 
+  /* ===== 더더더 짜치게 ===== */
+  html { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><text y='32' font-size='32'>👆</text></svg>") 14 2, auto; }
+  .blk[data-f]::after { content: attr(data-f); }
+  .dancer { position: fixed; bottom: 6px; font-size: clamp(40px, 9vw, 70px); z-index: 40; pointer-events: none; }
+  .dancer.l { left: 4px; animation: dance .4s steps(2) infinite; }
+  .dancer.r { right: 4px; animation: dance .4s steps(2) infinite reverse; }
+  @keyframes dance { 0% { transform: rotate(-20deg) translateY(0) scaleX(1); } 100% { transform: rotate(20deg) translateY(-20px) scaleX(-1); } }
+  .money { position: fixed; top: -40px; z-index: 30; pointer-events: none; font-size: 24px; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+  .boing { position: fixed; z-index: 96; pointer-events: none; font-weight: 900; font-size: 26px; color: #fff; -webkit-text-stroke: 2px #000; animation: boing .8s ease-out forwards; }
+  @keyframes boing { 0% { transform: translate(-50%,-50%) scale(0); } 30% { transform: translate(-50%,-80%) scale(1.5) rotate(-15deg); } 100% { transform: translate(-50%,-200%) scale(1) rotate(15deg); opacity: 0; } }
+  body.invert { animation: bgmove 3s linear infinite, invert .6s steps(4); }
+  @keyframes invert { 0%,50% { filter: invert(1) hue-rotate(180deg); } 25%,75% { filter: none; } }
+  #wrap.spin { animation: wrapspin .8s cubic-bezier(.5,-0.6,.5,1.6); }
+  @keyframes wrapspin { to { transform: rotate(360deg); } }
+  .counter { position: fixed; top: 34px; left: 4px; z-index: 40; background: #000; color: #f00; font-family: "Courier New", monospace; font-size: 12px; padding: 2px 6px; border: 2px inset #888; }
+  .ad {
+    position: fixed; z-index: 150; width: min(300px, 86vw); background: #ece9d8; color: #000; border: 3px solid #0054e3; border-radius: 8px 8px 0 0;
+    box-shadow: 6px 6px 0 rgba(0,0,0,.5); font-family: Tahoma, "Gulim", sans-serif; animation: adin .5s cubic-bezier(.2,2,.4,1);
+  }
+  @keyframes adin { from { transform: scale(0) rotate(30deg); } }
+  .ad .bar { background: linear-gradient(#0a5fe8, #0042c8); color: #fff; font-weight: bold; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .ad .x { background: #e0441d; color: #fff; border: 1px solid #fff; border-radius: 3px; width: 22px; height: 20px; display: grid; place-items: center; cursor: pointer; transition: transform .15s; }
+  .ad .body { padding: 12px; text-align: center; font-size: 15px; }
+  .ad .body b { color: #f00; font-size: 20px; display: block; animation: blink .3s steps(2) infinite; }
+  .ad .ok { margin-top: 8px; font: inherit; padding: 4px 18px; }
+  #loading { position: fixed; inset: 0; z-index: 300; background: #000; color: #0f0; font-family: "Courier New", monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 18px; text-align: center; padding: 16px; }
+  #loading .pb { width: min(320px, 80vw); height: 24px; border: 2px solid #0f0; padding: 2px; }
+  #loading .pb div { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #0f0 0 10px, #000 10px 12px); }
+  .toast { position: fixed; left: 50%; bottom: 30%; transform: translateX(-50%); z-index: 250; background: #ff0; color: #f00; border: 4px double #f00; padding: 10px 16px; font-size: 18px; font-weight: bold; animation: wobble .3s infinite; }
+
   .under { margin-top: 10px; font-size: 13px; background: #000; color: #0f0; padding: 2px 8px; font-family: "Courier New", monospace; }
   .under img { vertical-align: middle; }
 </style>
@@ -137,6 +168,15 @@
 </div>
 <div class="under">🚧 공사중 🚧 Best viewed in Internet Explorer 6.0</div>
 
+<div class="counter">TODAY <span id="visit">1004</span> / TOTAL 9,999,999</div>
+<div class="dancer l">🕺</div>
+<div class="dancer r">💃</div>
+<div id="loading">
+  <div>Loading 블록빵빵.exe ...</div>
+  <div class="pb"><div id="pbar"></div></div>
+  <div id="ltxt">0%</div>
+  <div style="font-size:13px;color:#888">(화면을 누르면 시작됩니다 — 소리 켜짐 주의)</div>
+</div>
 <div id="over">
   <h2>겜 끝 ㅋ</h2>
   <p id="final">점수: 0</p>
@@ -399,6 +439,133 @@ document.getElementById("again").addEventListener("click", () => {
   document.getElementById("over").classList.remove("on");
   start();
 });
+
+// ===================== 더더더 짜치게 =====================
+const FACES = ["😎", "🤪", "😜", "🥴", "🤡", "😱", "🤓", "😤", "🥵", "👽", "💀", "🐸"];
+const BOING = ["뿅!", "띠용", "쀼잉", "철컥", "뾰로롱", "퍽!", "OK!", "냠"];
+const faceOf = {};
+function faceFor(color) { return faceOf[color] || (faceOf[color] = FACES[Math.floor(Math.random() * FACES.length)]); }
+
+// 블록마다 얼굴 다르게
+const _renderBoard = renderBoard;
+renderBoard = function () {
+  _renderBoard();
+  board.forEach((col, i) => col ? cells[i].dataset.f = faceFor(col) : delete cells[i].dataset.f);
+};
+const _buildPieceEl = buildPieceEl;
+buildPieceEl = function (p) {
+  const el = _buildPieceEl(p);
+  el.querySelectorAll(".blk").forEach(b => b.dataset.f = faceFor(p.color));
+  return el;
+};
+
+// 놓을 때 효과음 글자
+const _place = place;
+place = function (i, p, r, c) {
+  const rc = cells[r * N + c].getBoundingClientRect();
+  const d = document.createElement("div");
+  d.className = "boing"; d.textContent = BOING[Math.floor(Math.random() * BOING.length)];
+  d.style.left = rc.left + rc.width / 2 + "px"; d.style.top = rc.top + "px";
+  document.body.appendChild(d); setTimeout(() => d.remove(), 800);
+  _place(i, p, r, c);
+};
+
+// 줄 지우면 색 반전 + 판 한바퀴 + 돈 비
+const _celebrate = celebrate;
+celebrate = function (lines, idxs) {
+  _celebrate(lines, idxs);
+  document.body.classList.remove("invert"); void document.body.offsetWidth; document.body.classList.add("invert");
+  const w = document.getElementById("wrap");
+  w.classList.remove("spin"); void w.offsetWidth; w.classList.add("spin");
+  makeItRain(15 * lines);
+  if (lines >= 2 || Math.random() < .25) setTimeout(showAd, 900);
+};
+function makeItRain(n) {
+  for (let k = 0; k < n; k++) setTimeout(() => {
+    const m = document.createElement("div");
+    m.className = "money"; m.textContent = ["💸", "💰", "🪙", "💵"][k % 4];
+    m.style.left = Math.random() * 100 + "vw";
+    const dur = 1.5 + Math.random() * 2;
+    m.style.animationDuration = dur + "s";
+    document.body.appendChild(m); setTimeout(() => m.remove(), dur * 1000);
+  }, k * 60);
+}
+
+// 2005년 감성 팝업 광고 (X 버튼이 도망감)
+const ADS = [
+  ["축하합니다!!!", "당신은 <b>1,000,000번째</b> 방문자입니다!"],
+  ["경고!!", "컴퓨터에서 <b>블록 바이러스</b>가 37개 발견되었습니다"],
+  ["특가 이벤트", "지금 블록 사면 <b>1+1+1+1</b>"],
+  ["알림", "님 지금 <b>너무 잘함</b> 진짜임"],
+];
+function showAd() {
+  if (document.querySelectorAll(".ad").length >= 2) return;
+  const [t, msg] = ADS[Math.floor(Math.random() * ADS.length)];
+  const ad = document.createElement("div");
+  ad.className = "ad";
+  ad.innerHTML = `<div class="bar"><span>⚠ ${t}</span><span class="x">✕</span></div><div class="body">${msg}<br><button class="ok">확인</button></div>`;
+  ad.style.left = Math.random() * (innerWidth - 310) + 5 + "px";
+  ad.style.top = 60 + Math.random() * (innerHeight - 260) + "px";
+  document.body.appendChild(ad);
+  beep(1200, .08, "square"); setTimeout(() => beep(900, .12, "square"), 100);
+  const x = ad.querySelector(".x");
+  let runs = 0;
+  const run = () => {
+    if (runs++ >= 3) return; // 세 번 도망가면 봐줌
+    x.style.transform = `translate(${Math.random() * 160 - 140}px, ${Math.random() * 120}px)`;
+    beep(1500, .05);
+  };
+  x.addEventListener("pointerenter", run);
+  x.addEventListener("pointerdown", e => { e.stopPropagation(); if (runs < 3) run(); else ad.remove(); });
+  ad.querySelector(".ok").addEventListener("click", () => { ad.remove(); popText("감사합니다 ^^7"); });
+}
+
+// 우클릭 금지 (국룰)
+function toast(t) {
+  const d = document.createElement("div");
+  d.className = "toast"; d.textContent = t;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1500);
+}
+window.addEventListener("contextmenu", e => { e.preventDefault(); toast("🚫 마우스 오른쪽 버튼 사용 금지!! 🚫"); beep(200, .3, "sawtooth"); });
+
+// 제목 표시줄 흐르는 글자
+let tt = "★ 블록빵빵 ULTRA DELUXE ★ 지금 접속중 ★ ";
+setInterval(() => { tt = tt.slice(1) + tt[0]; document.title = tt; }, 200);
+
+// 방문자 카운터 혼자 올라감
+setInterval(() => { const v = document.getElementById("visit"); v.textContent = +v.textContent + Math.floor(Math.random() * 3); }, 900);
+
+// 뽕짝 BGM (삑삑이 버전)
+const MELODY = [523, 523, 659, 784, 659, 523, 587, 0, 587, 587, 698, 880, 698, 587, 523, 0, 784, 784, 880, 784, 659, 523, 587, 659, 523, 0, 0, 0];
+let bgmOn = false, step = 0;
+function bgm() {
+  if (!bgmOn) return;
+  const f = MELODY[step++ % MELODY.length];
+  if (f) beep(f, .14, "square", .03);
+  if (step % 2) beep(110, .05, "triangle", .05);
+  setTimeout(bgm, 170);
+}
+
+// 가짜 로딩 (99%에서 멈췄다가 뒤로 감)
+(function fakeLoad() {
+  const bar = document.getElementById("pbar"), txt = document.getElementById("ltxt"), L = document.getElementById("loading");
+  const seq = [7, 23, 41, 42, 42, 68, 99, 99, 99, 87, 99, 100];
+  let k = 0, done = false;
+  const tick = () => {
+    const v = seq[k++];
+    bar.style.width = v + "%";
+    txt.textContent = v === 87 ? "87% (어 왜 줄어듦?)" : v + "%";
+    if (k < seq.length) setTimeout(tick, 250 + Math.random() * 300);
+    else { txt.textContent = "100% 완료!! 아무데나 누르세요 ▶"; done = true; }
+  };
+  tick();
+  L.addEventListener("pointerdown", () => {
+    if (!done) { toast("아직 로딩중이라고요;;"); return; }
+    L.remove();
+    beep(660, .1); bgmOn = true; bgm();
+    popText("게임 시작!!!");
+  });
+})();
 
 function start() {
   board = Array(N * N).fill(null);
