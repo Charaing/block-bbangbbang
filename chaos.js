@@ -111,7 +111,7 @@ const busy = () => document.querySelector("#pay.on, #troll.on, #over.on, #loadin
 // ---------- 짜침 도감 ----------
 const G = {}, found = new Set();
 const gag = (id, name, fn) => { G[id] = { name, fn }; };
-const counter = mk(`📖 짜침 도감 <span>0</span>/100`, "czcount");
+const counter = mk(`📖 짜침 도감 <span>0</span>/<i>100</i>`, "czcount");
 let newBadge;
 function run(id, ...args) {
   const g = G[id];
@@ -122,7 +122,8 @@ function run(id, ...args) {
     counter.querySelector("span").textContent = found.size;
     if (newBadge) newBadge.remove();
     newBadge = mk(`NEW! 짜침 #${id} ${g.name}`, "cznew", 2200);
-    if (found.size === 100) setTimeout(() => { popText("짜침 100종 완성!!!"); fall(["🏆", "👑", "💯"], 60); }, 500);
+    const total = Object.keys(G).length;
+    if (found.size === total) setTimeout(() => { popText(`짜침 ${total}종 완성!!!`); fall(["🏆", "👑", "💯"], 60); }, 500);
   }
 }
 
@@ -293,26 +294,34 @@ gag(100, "가짜 저작권 표시", () => document.querySelector(".under").inser
 
 // 콘솔에서 czRun(42) 하면 해당 짜침 바로 실행
 window.czRun = run;
+// 추가 팩(chaos2.js 등)이 짜침을 더 넣을 수 있게 공개
+const range = (a, b) => Array.from({ length: b - a + 1 }, (_, k) => a + k);
+const pools = { amb: range(1, 40), place: range(41, 60), clear: range(61, 75) };
+window.CZ = {
+  R, ri, pick, mk, say, sayAt, fly, htmlFx, fall, noise, busy, run, pools,
+  gag(id, name, fn, pool) { gag(id, name, fn); if (pool) pools[pool].push(id); counter.querySelector("i").textContent = Object.keys(G).length; },
+  found: () => [...found].sort((a, b) => a - b).map(id => `#${id} ${G[id].name}`),
+};
 
 // =================== 연결 ===================
 // 처음부터 깔려 있는 것들
 [91, 98, 99, 100].forEach(id => run(id));
 
 // 랜덤 이벤트 (5초마다)
-setInterval(() => { if (!busy() && !document.hidden) run(ri(1, 40)); }, 5000);
+setInterval(() => { if (!busy() && !document.hidden) run(pick(pools.amb)); }, 5000);
 
 // 블록 놓을 때
 const _place = place;
 place = function (i, p, r, c) {
   _place(i, p, r, c);
-  if (Math.random() < .4) run(ri(41, 60), r * N + c, p);
+  if (Math.random() < .4) run(pick(pools.place), r * N + c, p);
 };
 // 줄 지울 때 (두 개씩)
 const _celebrate = celebrate;
 celebrate = function (lines, idxs) {
   _celebrate(lines, idxs);
-  run(ri(61, 75), lines);
-  setTimeout(() => run(ri(61, 75), lines), 700);
+  run(pick(pools.clear), lines);
+  setTimeout(() => run(pick(pools.clear), lines), 700);
 };
 // 점수 구간
 let prev = 0, hit = {};
