@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>블록빵빵 ULTRA DELUXE</title>
+<style>
+  * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; }
+  body {
+    font-family: "Comic Sans MS", "Comic Sans", "Gungsuh", "궁서", cursive;
+    background: linear-gradient(45deg, #ff00cc, #00ffea, #ffee00, #ff0055, #33ff00);
+    background-size: 400% 400%;
+    animation: bgmove 3s linear infinite;
+    color: #fff;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  @keyframes bgmove { 0% { background-position: 0 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+  .marquee { width: 100%; overflow: hidden; white-space: nowrap; background: #0000ff; color: #ffff00; font-weight: bold; padding: 4px 0; border-bottom: 4px dashed #ff0; }
+  .marquee span { display: inline-block; padding-left: 100%; animation: marq 9s linear infinite; }
+  @keyframes marq { to { transform: translateX(-100%); } }
+
+  h1 {
+    margin: 8px 0 0; font-size: clamp(28px, 8vw, 52px);
+    background: linear-gradient(90deg, red, orange, yellow, lime, cyan, blue, magenta, red);
+    background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+    -webkit-text-stroke: 2px #000;
+    animation: rainbow 1s linear infinite, wobble 0.8s ease-in-out infinite;
+    filter: drop-shadow(4px 4px 0 #000);
+  }
+  @keyframes rainbow { to { background-position: 200% center; } }
+  @keyframes wobble { 0%,100% { transform: rotate(-4deg) scale(1); } 50% { transform: rotate(4deg) scale(1.08); } }
+
+  .score {
+    font-size: clamp(22px, 6vw, 34px); margin: 4px 0 8px;
+    text-shadow: 3px 3px 0 #f0f, -3px -3px 0 #0ff;
+    animation: blink 0.5s steps(2) infinite;
+  }
+  .score.bump { animation: bump 0.4s ease; }
+  @keyframes blink { 50% { color: #ff0; } }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.8) rotate(15deg); } 100% { transform: scale(1); } }
+
+  #wrap { --c: min(10.5vw, 46px); }
+  #board {
+    display: grid; grid-template-columns: repeat(8, var(--c)); grid-template-rows: repeat(8, var(--c));
+    border: 6px ridge #ff0; background: #222; padding: 0;
+    box-shadow: 0 0 0 6px #f0f, 0 0 30px 10px #0ff;
+    animation: boardwiggle 4s ease-in-out infinite;
+  }
+  @keyframes boardwiggle { 0%,100% { transform: rotate(-1deg); } 50% { transform: rotate(1deg); } }
+  .cell { width: var(--c); height: var(--c); box-shadow: inset 0 0 0 1px #444; }
+  .blk {
+    border: 3px outset rgba(255,255,255,.7);
+    box-shadow: inset -4px -4px 0 rgba(0,0,0,.35);
+    position: relative;
+  }
+  .blk::after { content: "😎"; position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--c) * .45); opacity: .85; }
+  .cell.blk.placed { animation: plop 0.45s cubic-bezier(.3,2.2,.5,1); }
+  @keyframes plop { 0% { transform: scale(0) rotate(-180deg); } 100% { transform: scale(1) rotate(0); } }
+  .cell.ghost { background: rgba(255,255,255,.55) !important; animation: ghostblink .25s steps(2) infinite; }
+  @keyframes ghostblink { 50% { background: rgba(255,255,0,.7) !important; } }
+  .cell.boom { animation: boom 0.5s ease-in forwards; z-index: 5; }
+  @keyframes boom { 0% { transform: scale(1) rotate(0); filter: brightness(1); } 40% { transform: scale(1.6) rotate(200deg); filter: brightness(3); } 100% { transform: scale(0) rotate(720deg); opacity: 0; } }
+
+  #tray { display: flex; gap: 10px; margin-top: 18px; min-height: calc(var(--c) * 2.6); align-items: center; justify-content: center; }
+  .slot { width: calc(var(--c) * 2.8); height: calc(var(--c) * 2.8); display: grid; place-items: center; }
+  .piece { display: grid; cursor: grab; animation: float 1.2s ease-in-out infinite; touch-action: none; }
+  .slot:nth-child(2) .piece { animation-delay: .3s; }
+  .slot:nth-child(3) .piece { animation-delay: .6s; }
+  @keyframes float { 0%,100% { transform: translateY(-6px) rotate(-6deg); } 50% { transform: translateY(6px) rotate(6deg); } }
+  .piece.nope { filter: grayscale(1) brightness(.6); animation: sad 0.6s ease-in-out infinite; }
+  @keyframes sad { 0%,100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+  .piece .pc { width: calc(var(--c) * .55); height: calc(var(--c) * .55); }
+  .piece .pc.blk::after { font-size: calc(var(--c) * .25); }
+  .piece .pc.blk { border-width: 2px; }
+
+  #drag { position: fixed; display: grid; pointer-events: none; z-index: 50; opacity: .9; filter: drop-shadow(0 10px 6px rgba(0,0,0,.5)); animation: dragspin .3s linear infinite alternate; }
+  #drag .pc { width: var(--c); height: var(--c); }
+  @keyframes dragspin { from { transform: rotate(-5deg) scale(1.05); } to { transform: rotate(5deg) scale(.95); } }
+
+  .shake { animation: shake 0.45s linear; }
+  @keyframes shake {
+    10% { transform: translate(-12px, 8px) rotate(-2deg); } 20% { transform: translate(14px, -10px) rotate(2deg); }
+    30% { transform: translate(-16px, -6px); } 40% { transform: translate(10px, 12px) rotate(-3deg); }
+    50% { transform: translate(-8px, -14px); } 60% { transform: translate(12px, 6px) rotate(2deg); }
+    70% { transform: translate(-10px, 4px); } 80% { transform: translate(6px, -6px); } 100% { transform: none; }
+  }
+  .flash { position: fixed; inset: 0; background: #fff; z-index: 90; pointer-events: none; animation: flash .3s ease-out forwards; }
+  @keyframes flash { from { opacity: .9; } to { opacity: 0; } }
+
+  .pop {
+    position: fixed; left: 50%; top: 40%; z-index: 100; pointer-events: none; white-space: nowrap;
+    font-size: clamp(36px, 12vw, 80px); font-weight: 900; color: #ff0; -webkit-text-stroke: 3px #f00;
+    text-shadow: 6px 6px 0 #00f, 12px 12px 0 #0f0;
+    animation: pop 1.3s cubic-bezier(.2,2,.4,1) forwards;
+  }
+  @keyframes pop {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-720deg); }
+    40% { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); }
+    60% { transform: translate(-50%, -50%) scale(1) rotate(-10deg); }
+    100% { transform: translate(-50%, -150%) scale(.5) rotate(30deg); opacity: 0; }
+  }
+  .particle { position: fixed; z-index: 95; pointer-events: none; font-size: 26px; }
+  .spark { position: fixed; z-index: 99; pointer-events: none; font-size: 16px; animation: sparkfade .7s linear forwards; }
+  @keyframes sparkfade { to { transform: translateY(30px) rotate(360deg) scale(0); opacity: 0; } }
+
+  #over {
+    position: fixed; inset: 0; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center;
+    background: repeating-conic-gradient(#f00 0 15deg, #ff0 15deg 30deg); animation: spinbg 2s linear infinite;
+  }
+  @keyframes spinbg { to { filter: hue-rotate(360deg); } }
+  #over.on { display: flex; }
+  #over h2 {
+    font-size: clamp(48px, 16vw, 110px); margin: 0; color: #fff; -webkit-text-stroke: 4px #000; text-shadow: 8px 8px 0 #000;
+    animation: overin 1s cubic-bezier(.2,2,.4,1), wobble .6s ease-in-out 1s infinite;
+  }
+  @keyframes overin { from { transform: scale(10) rotate(1080deg); opacity: 0; } }
+  #over p { font-size: 28px; color: #000; background: #0ff; padding: 6px 14px; border: 4px dashed #f0f; }
+  #again {
+    font: inherit; font-size: 28px; padding: 12px 28px; border: 6px outset #0f0; background: #ff0; color: #f00; cursor: pointer;
+    animation: wobble .4s ease-in-out infinite;
+  }
+  #again:active { border-style: inset; }
+
+  .under { margin-top: 10px; font-size: 13px; background: #000; color: #0f0; padding: 2px 8px; font-family: "Courier New", monospace; }
+  .under img { vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="marquee"><span>★☆★ 블록빵빵 ULTRA DELUXE 2026 ★☆★ 최고의 게임 ★ 여러분의 컴퓨터가 터질 수도 있습니다 ★ 방문자 수: 999999명 ★ 1024x768 해상도에 최적화 ★☆★</span></div>
+<h1>블록빵빵!!!</h1>
+<div class="score" id="score">점수: 0</div>
+<div id="wrap">
+  <div id="board"></div>
+  <div id="tray"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+</div>
+<div class="under">🚧 공사중 🚧 Best viewed in Internet Explorer 6.0</div>
+
+<div id="over">
+  <h2>겜 끝 ㅋ</h2>
+  <p id="final">점수: 0</p>
+  <button id="again">↻ 다시하기 ↻</button>
+</div>
+
+<script>
+const N = 8;
+const COLORS = ["#ff0055", "#00ff66", "#3366ff", "#ffcc00", "#ff66ff", "#00ffff", "#ff7700", "#9933ff"];
+const SHAPES = [
+  [[0,0]],
+  [[0,0],[0,1]], [[0,0],[1,0]],
+  [[0,0],[0,1],[0,2]], [[0,0],[1,0],[2,0]],
+  [[0,0],[0,1],[0,2],[0,3]], [[0,0],[1,0],[2,0],[3,0]],
+  [[0,0],[0,1],[0,2],[0,3],[0,4]], [[0,0],[1,0],[2,0],[3,0],[4,0]],
+  [[0,0],[0,1],[1,0],[1,1]],
+  [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],
+  [[0,0],[1,0],[1,1]], [[0,1],[1,0],[1,1]], [[0,0],[0,1],[1,1]], [[0,0],[0,1],[1,0]],
+  [[0,0],[1,0],[2,0],[2,1]], [[0,1],[1,1],[2,1],[2,0]], [[0,0],[0,1],[0,2],[1,0]], [[0,0],[0,1],[0,2],[1,2]],
+  [[0,0],[0,1],[0,2],[1,1]], [[1,0],[1,1],[1,2],[0,1]],
+  [[0,0],[0,1],[1,1],[1,2]], [[0,1],[0,2],[1,0],[1,1]],
+  [[0,0],[1,0],[2,0],[2,1],[2,2]], [[0,2],[1,2],[2,0],[2,1],[2,2]],
+];
+const PRAISE = ["개쩐다!!!", "ㄹㅇ 미쳤다", "GOOD JOB 👍", "천재 아님?", "와 샌즈!", "MEGA KILL", "갓벽해 ✨", "레전드 ㄷㄷ", "엄마 나 TV 나와!"];
+const COMBO = ["", "", "더블!!", "트리플!!!", "쿼드라!!!!", "펜타킬!!!!!"];
+
+const boardEl = document.getElementById("board");
+const slots = [...document.querySelectorAll(".slot")];
+const scoreEl = document.getElementById("score");
+let board, tray, score, cells = [];
+
+for (let i = 0; i < N * N; i++) {
+  const d = document.createElement("div");
+  d.className = "cell";
+  boardEl.appendChild(d);
+  cells.push(d);
+}
+
+// ---------- 소리 (삑삑) ----------
+let ac;
+function beep(freq, dur = 0.1, type = "square", vol = 0.08) {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.frequency.exponentialRampToValueAtTime(freq * (Math.random() < .5 ? 2 : .5), ac.currentTime + dur);
+    g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    o.connect(g).connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + dur);
+  } catch (e) {}
+}
+function fanfare() { [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => beep(f, .15, "sawtooth"), i * 70)); }
+function sadTrombone() { [392, 370, 349, 262].forEach((f, i) => setTimeout(() => beep(f, i === 3 ? .9 : .35, "sawtooth", .1), i * 400)); }
+
+// ---------- 게임 로직 ----------
+function newPiece() {
+  return { shape: SHAPES[Math.floor(Math.random() * SHAPES.length)], color: COLORS[Math.floor(Math.random() * COLORS.length)] };
+}
+function fits(shape, r, c) {
+  return shape.every(([dr, dc]) => {
+    const rr = r + dr, cc = c + dc;
+    return rr >= 0 && rr < N && cc >= 0 && cc < N && !board[rr * N + cc];
+  });
+}
+function canFitAnywhere(shape) {
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (fits(shape, r, c)) return true;
+  return false;
+}
+function dims(shape) {
+  return [Math.max(...shape.map(s => s[0])) + 1, Math.max(...shape.map(s => s[1])) + 1];
+}
+
+function renderBoard() {
+  board.forEach((col, i) => {
+    const el = cells[i];
+    el.classList.toggle("blk", !!col);
+    el.style.background = col || "";
+  });
+}
+function buildPieceEl(p, cls) {
+  const [h, w] = dims(p.shape);
+  const el = document.createElement("div");
+  el.style.gridTemplateColumns = `repeat(${w}, auto)`;
+  el.style.gridTemplateRows = `repeat(${h}, auto)`;
+  const set = new Set(p.shape.map(([r, c]) => r + "," + c));
+  for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+    const pc = document.createElement("div");
+    pc.className = "pc";
+    if (set.has(r + "," + c)) { pc.classList.add("blk"); pc.style.background = p.color; }
+    el.appendChild(pc);
+  }
+  return el;
+}
+function renderTray() {
+  slots.forEach((slot, i) => {
+    slot.innerHTML = "";
+    const p = tray[i];
+    if (!p) return;
+    const el = buildPieceEl(p);
+    el.className = "piece" + (canFitAnywhere(p.shape) ? "" : " nope");
+    el.addEventListener("pointerdown", e => startDrag(e, i));
+    slot.appendChild(el);
+  });
+}
+function setScore(add) {
+  score += add;
+  scoreEl.textContent = "점수: " + score;
+  scoreEl.classList.remove("bump"); void scoreEl.offsetWidth; scoreEl.classList.add("bump");
+}
+
+// ---------- 드래그 ----------
+let drag = null;
+function cellSize() { return cells[0].getBoundingClientRect().width; }
+
+function startDrag(e, i) {
+  e.preventDefault();
+  beep(880, .05);
+  const p = tray[i];
+  const el = buildPieceEl(p);
+  el.id = "drag";
+  document.getElementById("wrap").appendChild(el);
+  drag = { i, p, el, r: null, c: null };
+  slots[i].firstChild.style.visibility = "hidden";
+  moveDrag(e);
+}
+function moveDrag(e) {
+  if (!drag) return;
+  const cs = cellSize();
+  const [h, w] = dims(drag.p.shape);
+  const x = e.clientX - (w * cs) / 2;
+  const y = e.clientY - h * cs - 40; // 손가락에 안 가리게 위로 띄움
+  drag.el.style.left = x + "px";
+  drag.el.style.top = y + "px";
+  const b = cells[0].getBoundingClientRect();
+  const r = Math.round((y - b.top) / cs), c = Math.round((x - b.left) / cs);
+  cells.forEach(el => el.classList.remove("ghost"));
+  if (fits(drag.p.shape, r, c)) {
+    drag.r = r; drag.c = c;
+    drag.p.shape.forEach(([dr, dc]) => cells[(r + dr) * N + c + dc].classList.add("ghost"));
+  } else {
+    drag.r = drag.c = null;
+  }
+  if (Math.random() < .3) sparkle(e.clientX, e.clientY);
+}
+function endDrag() {
+  if (!drag) return;
+  cells.forEach(el => el.classList.remove("ghost"));
+  drag.el.remove();
+  const { i, p, r, c } = drag;
+  drag = null;
+  if (r === null) {
+    beep(120, .25, "sawtooth");
+    slots[i].firstChild.style.visibility = "";
+    return;
+  }
+  place(i, p, r, c);
+}
+window.addEventListener("pointermove", moveDrag);
+window.addEventListener("pointerup", endDrag);
+window.addEventListener("pointercancel", endDrag);
+
+function place(i, p, r, c) {
+  p.shape.forEach(([dr, dc]) => {
+    const idx = (r + dr) * N + c + dc;
+    board[idx] = p.color;
+  });
+  renderBoard();
+  p.shape.forEach(([dr, dc]) => {
+    const el = cells[(r + dr) * N + c + dc];
+    el.classList.remove("placed"); void el.offsetWidth; el.classList.add("placed");
+  });
+  beep(300 + Math.random() * 600, .12);
+  setScore(p.shape.length);
+  tray[i] = null;
+
+  // 꽉 찬 줄 찾기
+  const clear = new Set();
+  let lines = 0;
+  for (let k = 0; k < N; k++) {
+    const row = [...Array(N)].map((_, j) => k * N + j);
+    const col = [...Array(N)].map((_, j) => j * N + k);
+    if (row.every(x => board[x])) { row.forEach(x => clear.add(x)); lines++; }
+    if (col.every(x => board[x])) { col.forEach(x => clear.add(x)); lines++; }
+  }
+
+  const next = () => {
+    if (tray.every(t => !t)) tray = [newPiece(), newPiece(), newPiece()];
+    renderTray();
+    if (!tray.some(t => t && canFitAnywhere(t.shape))) gameOver();
+  };
+
+  if (lines) {
+    clear.forEach(x => cells[x].classList.add("boom"));
+    celebrate(lines, [...clear]);
+    setScore(10 * lines * lines);
+    setTimeout(() => {
+      clear.forEach(x => { board[x] = null; cells[x].classList.remove("boom", "placed"); });
+      renderBoard();
+      next();
+    }, 500);
+  } else {
+    next();
+  }
+}
+
+// ---------- 짜치는 연출 총동원 ----------
+function celebrate(lines, idxs) {
+  fanfare();
+  document.body.classList.remove("shake"); void document.body.offsetWidth; document.body.classList.add("shake");
+  const f = document.createElement("div"); f.className = "flash"; document.body.appendChild(f); setTimeout(() => f.remove(), 300);
+  const msg = COMBO[Math.min(lines, 5)] || "";
+  popText(PRAISE[Math.floor(Math.random() * PRAISE.length)]);
+  if (msg) setTimeout(() => popText(msg), 450);
+  idxs.forEach((x, k) => {
+    if (k % 2) return;
+    const rc = cells[x].getBoundingClientRect();
+    explode(rc.left + rc.width / 2, rc.top + rc.height / 2);
+  });
+}
+function popText(t) {
+  const d = document.createElement("div");
+  d.className = "pop"; d.textContent = t;
+  d.style.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1300);
+}
+const EMOJI = ["💥", "⭐", "🔥", "💯", "🎉", "✨", "🤑", "💩", "🍕", "😂"];
+function explode(x, y) {
+  for (let k = 0; k < 4; k++) {
+    const d = document.createElement("div");
+    d.className = "particle";
+    d.textContent = EMOJI[Math.floor(Math.random() * EMOJI.length)];
+    d.style.left = x + "px"; d.style.top = y + "px";
+    document.body.appendChild(d);
+    const ang = Math.random() * Math.PI * 2, dist = 80 + Math.random() * 160;
+    d.animate([
+      { transform: "translate(-50%,-50%) scale(.3) rotate(0)", opacity: 1 },
+      { transform: `translate(calc(-50% + ${Math.cos(ang) * dist}px), calc(-50% + ${Math.sin(ang) * dist + 120}px)) scale(1.6) rotate(${Math.random() * 1080 - 540}deg)`, opacity: 0 }
+    ], { duration: 900 + Math.random() * 400, easing: "cubic-bezier(.2,.8,.4,1)" }).onfinish = () => d.remove();
+  }
+}
+function sparkle(x, y) {
+  const d = document.createElement("div");
+  d.className = "spark"; d.textContent = ["✨", "⭐", "💖", "🌟"][Math.floor(Math.random() * 4)];
+  d.style.left = x + "px"; d.style.top = y + "px";
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 700);
+}
+// 마우스 따라다니는 반짝이 (2003년 싸이월드 감성)
+window.addEventListener("mousemove", e => { if (!drag && Math.random() < .15) sparkle(e.clientX, e.clientY); });
+
+function gameOver() {
+  sadTrombone();
+  setTimeout(() => {
+    document.getElementById("final").textContent = "최종 점수: " + score + "점 (ㅋ)";
+    document.getElementById("over").classList.add("on");
+  }, 600);
+}
+document.getElementById("again").addEventListener("click", () => {
+  document.getElementById("over").classList.remove("on");
+  start();
+});
+
+function start() {
+  board = Array(N * N).fill(null);
+  tray = [newPiece(), newPiece(), newPiece()];
+  score = 0;
+  scoreEl.textContent = "점수: 0";
+  renderBoard();
+  renderTray();
+}
+start();
+</script>
+</body>
+</html>
